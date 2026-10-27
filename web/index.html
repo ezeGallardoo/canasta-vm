@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Canasta VM — precios de Villa María</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,700&family=Literata:opsz,wght@7..72,420;7..72,650&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="mast">
+      <p class="brand">Canasta VM</p>
+      <p class="place">Villa María y Villa Nueva</p>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>El total de la compra, góndola por góndola.</h1>
+        <p>
+          Buscás un producto y ves el precio de lista en cada supermercado de Villa María y Villa Nueva que lo publicó en Precios Claros. Armás la canasta y la app suma solo las sucursales que tienen todos los ítems.
+        </p>
+      </section>
+
+      <form class="search" id="search" role="search">
+        <label for="query">Producto</label>
+        <div class="search__row">
+          <input id="query" name="q" type="search" placeholder="Yerba, leche, arroz" autocomplete="off" required />
+          <button type="submit">Buscar</button>
+        </div>
+      </form>
+
+      <p class="status" id="status" role="status"></p>
+      <ul class="results" id="results"></ul>
+
+      <section class="stores" id="stores" hidden>
+        <h2 id="stores-title"></h2>
+        <ul id="store-list"></ul>
+      </section>
+
+      <section class="basket" id="basket" hidden>
+        <h2>Canasta</h2>
+        <ul id="basket-items"></ul>
+        <h3>Total por sucursal</h3>
+        <ol id="totals"></ol>
+      </section>
+    </main>
+
+    <footer>
+      <p>Precios de lista publicados en Precios Claros. Una sucursal entra al total solo si informó cada producto de la canasta.</p>
+    </footer>
+    <script src="./app.js"></script>
+  </body>
+</html>
