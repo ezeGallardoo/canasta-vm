@@ -13,6 +13,8 @@ const totalsNode = document.querySelector("#totals");
 
 const basket = new Map();
 const storeCache = new Map();
+const addButtons = new Map();
+let totalsRun = 0;
 
 function localStore(store) {
   const city = (store.localidad || "")
@@ -61,15 +63,38 @@ function renderBasket() {
     row.append(remove);
     basketItems.append(row);
   }
+  for (const [id, button] of addButtons) {
+    const inBasket = basket.has(id);
+    button.disabled = inBasket;
+    button.textContent = inBasket ? "En la canasta" : "Sumar a la canasta";
+  }
   renderTotals();
 }
 
+function totalsMessage(text) {
+  const row = document.createElement("li");
+  row.className = "meta";
+  row.textContent = text;
+  totalsNode.replaceChildren(row);
+}
+
 async function renderTotals() {
-  totalsNode.replaceChildren();
-  if (basket.size === 0) return;
+  const run = ++totalsRun;
+  if (basket.size === 0) {
+    totalsNode.replaceChildren();
+    return;
+  }
+  totalsMessage("Sumando sucursales…");
   const byStore = new Map();
   for (const item of basket.values()) {
-    const stores = await storesFor(item.id);
+    let stores;
+    try {
+      stores = await storesFor(item.id);
+    } catch (error) {
+      if (run === totalsRun) totalsMessage(`${error.message} Probá de nuevo en un rato.`);
+      return;
+    }
+    if (run !== totalsRun) return;
     for (const store of stores) {
       const current = byStore.get(store.id) || {
         name: `${store.banderaDescripcion} · ${store.sucursalNombre}`,
@@ -88,10 +113,9 @@ async function renderTotals() {
     }))
     .sort((a, b) => a.total - b.total);
 
+  totalsNode.replaceChildren();
   if (complete.length === 0) {
-    const empty = document.createElement("li");
-    empty.textContent = "Ninguna sucursal de la ciudad publicó precio para todos los productos de la canasta.";
-    totalsNode.append(empty);
+    totalsMessage("Ninguna sucursal de la ciudad publicó precio para todos los productos de la canasta.");
     return;
   }
   complete.forEach((store, index) => {
@@ -114,7 +138,13 @@ async function renderTotals() {
 
 async function showStores(product) {
   statusNode.textContent = "Buscando sucursales…";
-  const stores = await storesFor(product.id);
+  let stores;
+  try {
+    stores = await storesFor(product.id);
+  } catch (error) {
+    statusNode.textContent = `${error.message} Probá de nuevo en un rato.`;
+    return;
+  }
   storesTitle.textContent = product.nombre;
   storeList.replaceChildren();
   storesNode.hidden = false;
@@ -154,6 +184,7 @@ document.querySelector("#search").addEventListener("submit", async (event) => {
   const query = new FormData(event.currentTarget).get("q").toString().trim();
   statusNode.textContent = "Buscando…";
   resultsNode.replaceChildren();
+  addButtons.clear();
   storesNode.hidden = true;
   try {
     const products = await searchProducts(query);
@@ -166,7 +197,10 @@ document.querySelector("#search").addEventListener("submit", async (event) => {
       title.textContent = product.nombre;
       const detail = document.createElement("span");
       detail.className = "meta";
-      detail.textContent = `${product.marca} · ${product.presentacion}`;
+      detail.textContent = [product.marca, product.presentacion]
+        .filter((part) => part && !/none/i.test(part))
+        .map((part) => part.replace(/(\d)\.0\b/, "$1"))
+        .join(" · ");
       copy.append(title, document.createElement("br"), detail);
       const actions = document.createElement("div");
       actions.className = "tag";
@@ -175,11 +209,13 @@ document.querySelector("#search").addEventListener("submit", async (event) => {
       range.textContent = `${money.format(product.precioMin)} – ${money.format(product.precioMax)}`;
       const add = document.createElement("button");
       add.type = "button";
-      add.textContent = "Sumar a la canasta";
+      add.textContent = basket.has(product.id) ? "En la canasta" : "Sumar a la canasta";
+      add.disabled = basket.has(product.id);
+      addButtons.set(product.id, add);
       add.addEventListener("click", async () => {
         basket.set(product.id, product);
-        await showStores(product);
         renderBasket();
+        await showStores(product);
       });
       actions.append(range, add);
       row.append(copy, actions);
