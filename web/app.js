@@ -169,6 +169,7 @@ document.querySelector("#search").addEventListener("submit", async (event) => {
       detail.textContent = `${product.marca} · ${product.presentacion}`;
       copy.append(title, document.createElement("br"), detail);
       const actions = document.createElement("div");
+      actions.className = "tag";
       const range = document.createElement("div");
       range.className = "price";
       range.textContent = `${money.format(product.precioMin)} – ${money.format(product.precioMax)}`;
